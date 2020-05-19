@@ -6,7 +6,7 @@ There are four webpage-type resources in Arboreum:
  - **Post:** Blog post written with Markdown. May have comments enabled. Styled as a group.
  - **Static:** Individually styled static page.
 
-The main branch is the latest stable release (although versions before `1.0.0` should still be considered fragile), with the exception of right now, because no coding has been done yet.
+The `master` branch is the latest stable release (although versions before `1.0.0` should still be considered fragile), with the exception of right now, because no coding has been done yet.
 
 # Status
 Currently, there is no Arboreum. A careful analysis of the codebase will reveal that none yet exists. This is just an initial commit.
