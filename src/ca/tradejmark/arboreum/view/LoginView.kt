@@ -1,12 +1,13 @@
 package ca.tradejmark.arboreum.view
 
 import kotlinx.html.*
+import javax.swing.text.html.HTMLDocument
 
 object LoginView {
-    fun loginHtml(): HTML.() -> Unit = {
+    fun loginHtml(back: String? = null): HTML.() -> Unit = {
         body {
             form {
-                action = "/admin/login"
+                if (back != null) action = "?back=$back"
                 method = FormMethod.post
                 label {
                     +"Username:"
@@ -31,7 +32,7 @@ object LoginView {
         }
     }
 
-    fun loginResultHtml(result: Boolean, user: String): HTML.() -> Unit = {
+    fun loginResultHtml(result: Boolean, user: String?): HTML.() -> Unit = {
         body {
             if (result) {
                 p {

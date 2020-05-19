@@ -1,5 +1,7 @@
 package ca.tradejmark.arboreum
+import ca.tradejmark.arboreum.model.User
 import ca.tradejmark.arboreum.view.LoginView
+import com.google.gson.Gson
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -14,17 +16,21 @@ import io.ktor.util.date.*
 import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
-import io.ktor.request.receive
-import io.ktor.request.receiveParameters
+import io.ktor.request.uri
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+    val gson = Gson()
     install(Sessions) {
-        cookie<Session>("ARB_SESSION", SessionStorageMemory()) {
+        cookie<Principal>("ARB_SESSION", SessionStorageMemory()) {
             cookie.extensions["SameSite"] = "lax"
+            serializer = object: SessionSerializer<Principal> {
+                override fun deserialize(text: String): Principal = gson.fromJson(text, Principal::class.java)
+                override fun serialize(session: Principal): String = gson.toJson(session)
+            }
         }
     }
 
@@ -56,54 +62,64 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(Authentication) {
-        basic("myBasicAuth") {
-            realm = "Ktor Server"
-            validate { if (it.name == "test" && it.password == "password") UserIdPrincipal(it.name) else null }
-        }
-        form("admin") {
+        form("login") {
             userParamName = "user"
             passwordParamName = "pass"
+            challenge {
+                val failures = call.authentication.allFailures
+                when {
+                    failures.contains(AuthenticationFailedCause.NoCredentials) -> call.respondRedirect("/admin/login?back=${call.request.uri}", false)
+                    failures.contains(AuthenticationFailedCause.InvalidCredentials) -> call.respondRedirect("/admin/login?failed=true", false)
+                    else -> call.respondRedirect("/admin/login", false)
+                }
+            }
+            validate { Principal(User(0, it.name)) }
+        }
+        session<Principal>("admin") {
+            challenge {
+                call.respondRedirect("/admin/login?back=${call.request.uri}", false)
+            }
+            validate { it }
         }
     }
 
     install(ContentNegotiation) {
-        gson {
-        }
+        register(ContentType.Application.Json, GsonConverter(gson))
     }
 
     routing {
         route("admin") {
             route("login") {
                 get {
-                    call.respondHtml(block = LoginView.loginHtml())
+                    val redir = call.request.queryParameters["back"]
+                    call.respondHtml(block = LoginView.loginHtml(redir))
                 }
-                post {
-                    val data = call.receiveParameters()
-                    call.respondHtml(
-                        block = LoginView.loginResultHtml(
-                            data["user"] == "tim",
-                            data["user"]!!
+                authenticate("login") {
+                    post {
+                        val principal = call.principal<Principal>()
+                        val redir = call.request.queryParameters["back"]
+                        call.sessions.set(principal)
+                        if (redir != null) {
+                            call.respondRedirect(redir, false)
+                        }
+                        else call.respondHtml(
+                            block = LoginView.loginResultHtml(
+                                principal != null,
+                                principal?.user?.username
+                            )
                         )
-                    )
+                    }
+                }
+            }
+            authenticate("admin") {
+                get {
+                    call.respondText("test", contentType = ContentType.Text.Plain)
                 }
             }
         }
 
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-        }
-
-        get("/html-dsl") {
-            call.respondHtml {
-                body {
-                    h1 { +"HTML" }
-                    ul {
-                        for (n in 1..10) {
-                            li { +"$n" }
-                        }
-                    }
-                }
-            }
         }
 
         get("/styles.css") {
@@ -125,36 +141,17 @@ fun Application.module(testing: Boolean = false) {
             resources("static")
         }
 
-        get("/session/increment") {
-            val session = call.sessions.get<MySession>() ?: MySession()
-            call.sessions.set(session.copy(count = session.count + 1))
-            call.respondText("Counter is ${session.count}. Refresh to increment.")
-        }
-
         install(StatusPages) {
             exception<AuthenticationException> { cause ->
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(HttpStatusCode.Unauthorized, cause)
             }
             exception<AuthorizationException> { cause ->
-                call.respond(HttpStatusCode.Forbidden)
+                call.respond(HttpStatusCode.Forbidden, cause)
             }
 
-        }
-
-        authenticate("myBasicAuth") {
-            get("/protected/route/basic") {
-                val principal = call.principal<UserIdPrincipal>()!!
-                call.respondText("Hello ${principal.name}")
-            }
-        }
-
-        get("/json/gson") {
-            call.respond(mapOf("hello" to "world"))
         }
     }
 }
-
-data class MySession(val count: Int = 0)
 
 class AuthenticationException : RuntimeException()
 class AuthorizationException : RuntimeException()
