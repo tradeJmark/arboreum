@@ -1,4 +1,5 @@
 package ca.tradejmark.arboreum
+import ca.tradejmark.arboreum.view.LoginView
 import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
@@ -13,6 +14,8 @@ import io.ktor.util.date.*
 import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
+import io.ktor.request.receive
+import io.ktor.request.receiveParameters
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -57,6 +60,10 @@ fun Application.module(testing: Boolean = false) {
             realm = "Ktor Server"
             validate { if (it.name == "test" && it.password == "password") UserIdPrincipal(it.name) else null }
         }
+        form("admin") {
+            userParamName = "user"
+            passwordParamName = "pass"
+        }
     }
 
     install(ContentNegotiation) {
@@ -65,6 +72,23 @@ fun Application.module(testing: Boolean = false) {
     }
 
     routing {
+        route("admin") {
+            route("login") {
+                get {
+                    call.respondHtml(block = LoginView.loginHtml())
+                }
+                post {
+                    val data = call.receiveParameters()
+                    call.respondHtml(
+                        block = LoginView.loginResultHtml(
+                            data["user"] == "tim",
+                            data["user"]!!
+                        )
+                    )
+                }
+            }
+        }
+
         get("/") {
             call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
         }
