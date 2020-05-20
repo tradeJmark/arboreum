@@ -1,6 +1,5 @@
 package ca.tradejmark.arboreum
 
-import ca.tradejmark.arboreum.ca.tradejmark.arboreum.module
 import io.ktor.http.*
 import kotlin.test.*
 import io.ktor.server.testing.*

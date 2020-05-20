@@ -17,6 +17,7 @@ import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
 import io.ktor.request.uri
+import io.ktor.util.url
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -86,6 +87,13 @@ fun Application.module(testing: Boolean = false) {
     install(ContentNegotiation) {
         register(ContentType.Application.Json, GsonConverter(gson))
     }
+
+    /*install(RedirectOn) {
+        condition {
+            this.request.uri == "/admin"
+        }
+        url = "/"
+    }*/
 
     routing {
         route("admin") {
