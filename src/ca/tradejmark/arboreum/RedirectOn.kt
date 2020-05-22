@@ -24,6 +24,7 @@ class RedirectOn(conf: Configuration) {
     private fun intercept(pipeline: ApplicationCallPipeline) = pipeline.intercept(ApplicationCallPipeline.Call) {
         if (condition(call)) {
             call.respondRedirect(url, permanent)
+            finish()
         }
     }
 

@@ -88,12 +88,12 @@ fun Application.module(testing: Boolean = false) {
         register(ContentType.Application.Json, GsonConverter(gson))
     }
 
-    /*install(RedirectOn) {
+    install(RedirectOn) {
         condition {
             this.request.uri == "/admin"
         }
         url = "/"
-    }*/
+    }
 
     routing {
         route("admin") {
@@ -156,7 +156,6 @@ fun Application.module(testing: Boolean = false) {
             exception<AuthorizationException> { cause ->
                 call.respond(HttpStatusCode.Forbidden, cause)
             }
-
         }
     }
 }
