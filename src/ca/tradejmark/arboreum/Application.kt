@@ -1,5 +1,7 @@
 package ca.tradejmark.arboreum
 
+import ca.tradejmark.arboreum.db.dao.UserDAO
+import ca.tradejmark.arboreum.db.schema.Users
 import ca.tradejmark.arboreum.model.User
 import ca.tradejmark.arboreum.view.LoginView
 import com.google.gson.Gson
@@ -18,6 +20,15 @@ import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
 import io.ktor.request.uri
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.security.SecureRandom
+import java.sql.Connection
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -25,6 +36,25 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
     val gson = Gson()
+
+    Database.connect("jdbc:sqlite:resources/data.db", "org.sqlite.JDBC")
+    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+    transaction {
+        SchemaUtils.create(Users)
+        Users.insertIgnore {
+            it[username] = "admin"
+            val salt = ByteArray(16)
+            SecureRandom().nextBytes(salt)
+            it[Users.salt] = salt
+            it[iterations] = 100000
+            val keySpec = PBEKeySpec("arboreum".toCharArray(), salt, 100000, 32)
+            it[password] = SecretKeyFactory
+                .getInstance("PBKDF2WithHmacSHA256")
+                .generateSecret(keySpec)
+                .encoded
+        }
+    }
+
     install(Sessions) {
         cookie<Principal>("ARB_SESSION", SessionStorageMemory()) {
             cookie.extensions["SameSite"] = "lax"
@@ -74,7 +104,17 @@ fun Application.module(testing: Boolean = false) {
                     else -> call.respondRedirect("/admin/login", false)
                 }
             }
-            validate { (name, _) -> Principal(User(0, name)) }
+            validate { (name, password) ->
+                transaction { UserDAO.fromUsername(name)?.passwordInfo() }?.let { info ->
+                    val keySpec = PBEKeySpec(password.toCharArray(), info.salt, info.iterations, 32)
+                    if (SecretKeyFactory
+                            .getInstance("PBKDF2WithHmacSHA256")
+                            .generateSecret(keySpec)
+                            .encoded!!.contentEquals(info.password)
+                    ) Principal(User(0, name))
+                    else null
+                }
+            }
         }
         session<Principal>("admin") {
             challenge {
