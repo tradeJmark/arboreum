@@ -1,4 +1,5 @@
 package ca.tradejmark.arboreum
+
 import ca.tradejmark.arboreum.model.User
 import ca.tradejmark.arboreum.view.LoginView
 import com.google.gson.Gson
@@ -17,7 +18,6 @@ import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
 import io.ktor.request.uri
-import io.ktor.util.url
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -74,7 +74,7 @@ fun Application.module(testing: Boolean = false) {
                     else -> call.respondRedirect("/admin/login", false)
                 }
             }
-            validate { Principal(User(0, it.name)) }
+            validate { (name, _) -> Principal(User(0, name)) }
         }
         session<Principal>("admin") {
             challenge {
@@ -86,13 +86,6 @@ fun Application.module(testing: Boolean = false) {
 
     install(ContentNegotiation) {
         register(ContentType.Application.Json, GsonConverter(gson))
-    }
-
-    install(RedirectOn) {
-        condition {
-            this.request.uri == "/admin"
-        }
-        url = "/"
     }
 
     routing {
@@ -110,18 +103,14 @@ fun Application.module(testing: Boolean = false) {
                         if (redir != null) {
                             call.respondRedirect(redir, false)
                         }
-                        else call.respondHtml(
-                            block = LoginView.loginResultHtml(
-                                principal != null,
-                                principal?.user?.username
-                            )
-                        )
+                        else call.respondRedirect("/admin", false)
                     }
                 }
             }
             authenticate("admin") {
                 get {
-                    call.respondText("test", contentType = ContentType.Text.Plain)
+                    val prin = call.principal<Principal>() ?: error("no principal")
+                    call.respondText("${prin.user}", contentType = ContentType.Text.Plain)
                 }
             }
         }
