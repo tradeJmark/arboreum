@@ -5,28 +5,44 @@ import javax.swing.text.html.HTMLDocument
 
 object LoginView {
     fun loginHtml(back: String? = null): HTML.() -> Unit = {
+        head {
+            title = "Login"
+            link {
+                rel = "stylesheet"
+                href = "/static/login.css"
+            }
+        }
         body {
-            form {
-                if (back != null) action = "?back=$back"
-                method = FormMethod.post
-                label {
-                    +"Username:"
-                }
-                br
-                textInput {
-                    name = "user"
-                }
-                br
-                label {
-                    +"Password:"
-                }
-                br
-                passwordInput {
-                    name = "pass"
-                }
-                br
-                submitInput {
-                    value = "Login"
+            div {
+                classes = setOf("content")
+                form {
+                    if (back != null) action = "?back=$back"
+                    method = FormMethod.post
+                    div {
+                        label {
+                            +"Username:"
+                        }
+                        br
+                        textInput {
+                            classes = setOf("textbox")
+                            name = "user"
+                        }
+                    }
+                    br
+                    div {
+                        label {
+                            +"Password:"
+                        }
+                        br
+                        passwordInput {
+                            classes = setOf("textbox")
+                            name = "pass"
+                        }
+                    }
+                    br
+                    submitInput {
+                        value = "Login"
+                    }
                 }
             }
         }
