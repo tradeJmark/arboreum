@@ -1,8 +1,13 @@
 package ca.tradejmark.arboreum
 
+import ca.tradejmark.arboreum.controllers.CategoryController
+import ca.tradejmark.arboreum.db.dao.CategoryDAO
 import ca.tradejmark.arboreum.db.dao.UserDAO
+import ca.tradejmark.arboreum.db.schema.Categories
 import ca.tradejmark.arboreum.db.schema.Users
+import ca.tradejmark.arboreum.model.Category
 import ca.tradejmark.arboreum.model.User
+import ca.tradejmark.arboreum.view.AdminView
 import ca.tradejmark.arboreum.view.LoginView
 import com.google.gson.Gson
 import io.ktor.application.*
@@ -19,7 +24,10 @@ import io.ktor.util.date.*
 import io.ktor.server.engine.*
 import io.ktor.auth.*
 import io.ktor.gson.*
+import io.ktor.request.receive
+import io.ktor.request.receiveText
 import io.ktor.request.uri
+import io.ktor.webjars.Webjars
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.insertIgnore
@@ -40,7 +48,7 @@ fun Application.module(testing: Boolean = false) {
     Database.connect("jdbc:sqlite:resources/data.db", "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
     transaction {
-        SchemaUtils.create(Users)
+        SchemaUtils.create(Users, Categories)
         Users.insertIgnore {
             it[username] = "admin"
             val salt = ByteArray(16)
@@ -66,6 +74,8 @@ fun Application.module(testing: Boolean = false) {
     }
 
     install(AutoHeadResponse)
+
+    install(Webjars)
 
     install(ConditionalHeaders)
 
@@ -150,7 +160,17 @@ fun Application.module(testing: Boolean = false) {
             authenticate("admin") {
                 get {
                     val prin = call.principal<Principal>() ?: error("no principal")
-                    call.respondText("${prin.user}", contentType = ContentType.Text.Plain)
+                    val catRoots = transaction {
+                        CategoryDAO.find { Categories.parent.isNull() }
+                    }
+                    call.respondHtml(block = AdminView.adminHtml(catRoots))
+                }
+                route("categories") {
+                    post {
+                        val cat = call.receive<Category>()
+                        CategoryController.addCategory(cat)
+                        call.respond(HttpStatusCode.NoContent)
+                    }
                 }
             }
         }
