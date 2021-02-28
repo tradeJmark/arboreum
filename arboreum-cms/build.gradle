@@ -1,0 +1,33 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.4.30"
+}
+
+group 'ca.tradejmark.arboreum'
+version '0.0.1'
+
+compileKotlin {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://kotlin.bintray.com/ktor' }
+}
+
+
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "io.ktor:ktor-server-core:$ktor_version"
+    implementation "io.ktor:ktor-html-builder:$ktor_version"
+
+    implementation 'org.litote.kmongo:kmongo-coroutine:4.2.4'
+
+    implementation 'com.vladsch.flexmark:flexmark-all:0.62.2'
+}
