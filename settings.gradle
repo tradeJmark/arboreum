@@ -1,3 +1,4 @@
 rootProject.name = "arboreum"
 include 'arboreum-server'
 include 'arboreum-cms'
+include 'arboreum-admin'
