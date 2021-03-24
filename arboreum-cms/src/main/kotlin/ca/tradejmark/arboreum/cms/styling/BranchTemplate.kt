@@ -7,7 +7,8 @@ import kotlinx.html.HTML
 
 interface BranchTemplate: Template<HTML> {
     val name: Placeholder<FlowContent>
-    val description: Placeholder<FlowContent>
+    val shortDesc: Placeholder<FlowContent>
+    val longDesc: Placeholder<FlowContent>
     val branches: PlaceholderList<FlowContent, SubbranchItemTemplate>
-    val leaves: Placeholder<FlowContent>
+    val leaves: PlaceholderList<FlowContent, LeafItemTemplate>
 }

@@ -76,10 +76,17 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.branch(template: Bran
         name {
             +branch.name
         }
-        description {
+        shortDesc {
             div {
                 unsafe {
-                    +arb.render(branch.description)
+                    +arb.render(branch.shortDesc)
+                }
+            }
+        }
+        longDesc {
+            div {
+                unsafe {
+                    +arb.render(branch.longDesc)
                 }
             }
         }
@@ -88,15 +95,32 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.branch(template: Bran
                 name {
                     +subbranch.name
                 }
-                description {
+                shortDesc {
                     div {
                         unsafe {
-                            arb.render(subbranch.description)
+                            arb.render(subbranch.shortDesc)
                         }
                     }
                 }
                 href {
                     href = branch.id
+                }
+            }
+        }
+        branch.leaves.forEach { leaf ->
+            leaves {
+                title {
+                    +leaf.title
+                }
+                blurb {
+                    div {
+                        unsafe {
+                            arb.render(leaf.blurb)
+                        }
+                    }
+                }
+                href {
+                    href = leaf.id
                 }
             }
         }
