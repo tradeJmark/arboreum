@@ -66,6 +66,13 @@ private suspend fun PipelineContext<Unit, ApplicationCall>.leaf(template: LeafTe
                 }
             }
         }
+        blurb {
+            div {
+                unsafe {
+                    +arb.render(leaf.blurb)
+                }
+            }
+        }
     }
 }
 

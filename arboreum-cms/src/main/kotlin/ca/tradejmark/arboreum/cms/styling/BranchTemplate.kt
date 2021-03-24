@@ -1,14 +1,13 @@
 package ca.tradejmark.arboreum.cms.styling
 
 import io.ktor.html.*
-import kotlinx.html.DIV
 import kotlinx.html.FlowContent
 import kotlinx.html.HTML
 
-interface BranchTemplate: Template<HTML> {
-    val name: Placeholder<FlowContent>
-    val shortDesc: Placeholder<FlowContent>
-    val longDesc: Placeholder<FlowContent>
-    val branches: PlaceholderList<FlowContent, SubbranchItemTemplate>
-    val leaves: PlaceholderList<FlowContent, LeafItemTemplate>
+abstract class BranchTemplate: Template<HTML> {
+    val name: Placeholder<FlowContent> = Placeholder()
+    val shortDesc: Placeholder<FlowContent> = Placeholder()
+    val longDesc: Placeholder<FlowContent> = Placeholder()
+    val branches: PlaceholderList<FlowContent, SubbranchItemTemplate> = PlaceholderList()
+    val leaves: PlaceholderList<FlowContent, LeafItemTemplate> = PlaceholderList()
 }
