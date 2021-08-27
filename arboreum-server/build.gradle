@@ -1,4 +1,4 @@
-buildscript {
+/*buildscript {
     repositories {
         jcenter()
     }
@@ -58,4 +58,4 @@ dependencies {
     implementation 'org.webjars:jquery:3.5.1'
 
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
-}
+}*/

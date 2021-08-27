@@ -1,13 +1,25 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.31'
+    id 'kotlin'
+    id 'idea'
 }
 
-version 'unspecified'
+group 'ca.tradejmark.arboreum'
+version '0.1.0'
 
-repositories {
-    mavenCentral()
+compileKotlin {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    kotlinOptions {
+        jvmTarget = "16"
+    }
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "io.ktor:ktor-server-core:$ktor_version"
+    implementation "io.ktor:ktor-utils-jvm:$ktor_version"
+    implementation "io.ktor:ktor-webjars:$ktor_version"
+    implementation 'org.webjars.bowergithub.sparksuite:simplemde-markdown-editor:1.11.2'
+    implementation project(':arboreum-cms')
 }
