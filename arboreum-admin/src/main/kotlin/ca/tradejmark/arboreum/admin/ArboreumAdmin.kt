@@ -1,10 +1,11 @@
 package ca.tradejmark.arboreum.admin
 
+import ca.tradejmark.arboreum.cms.Arboreum
 import io.ktor.application.*
 import io.ktor.util.*
 import io.ktor.webjars.*
 
-class ArboreumAdmin(conf: Configuration) {
+class ArboreumAdmin(val arboreum: Arboreum, conf: Configuration) {
     val webjarPath = conf.webjarPath ?: WEBJAR_DEFAULT
 
     class Configuration {
@@ -23,7 +24,9 @@ class ArboreumAdmin(conf: Configuration) {
                 }
             }
 
-            return ArboreumAdmin(conf)
+            val arb = pipeline.feature(Arboreum)
+
+            return ArboreumAdmin(arb, conf)
         }
     }
 }
