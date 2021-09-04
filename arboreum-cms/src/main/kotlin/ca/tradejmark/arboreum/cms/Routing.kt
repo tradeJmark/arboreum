@@ -1,4 +1,4 @@
-package ca.tradejmark.arboreum.cms.routing
+package ca.tradejmark.arboreum.cms
 
 import ca.tradejmark.arboreum.cms.Arboreum
 import ca.tradejmark.arboreum.cms.schema.Branch
